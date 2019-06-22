@@ -21,44 +21,51 @@ _logger = logging.getLogger(__name__)
 
 
 def bit_to_Mbit(func):
-    """Decorator for functions returning a speedtest DataFrame:
-    convert bit to Mbit for upload and download."""
+    """Decorator: convert bit to Mbit in upload and download columns."""
 
-    def outer(*args, **kwargs):
+    def decorated(*args, **kwargs):
         df = func(*args, **kwargs)
         df["Download"] = [f / 10 ** 6 for f in df["Download"]]
         df["Upload"] = [f / 10 ** 6 for f in df["Upload"]]
         return df
 
-    return outer
+    return decorated
 
 
-def add_mpldate(func):
-    """Decorator for functions returning a speedtest DataFrame:
-    add timestamps suitable for matplotlib (matplotlib.dates)."""
+def append_mdates(colname="mpldate"):
+    """Decorator: append timestamps suitable for matplotlib
+    (matplotlib.dates)."""
 
-    def outer(*args, **kwargs):
-        df = func(*args, **kwargs)
-        df["mpldate"] = [mdates.date2num(ts) for ts in df.index]
-        return df
+    def decorator(func):
+        def decorated(*args, **kwargs):
+            # do_something(*outer_args,**outer_kwargs)
+            df = func(*args, **kwargs)
+            df[colname] = [mdates.date2num(ts) for ts in df.index]
+            return df
 
-    return outer
+        return decorated
+
+    return decorator
 
 
-def add_tslocal(func):
-    """Decorator for functions returning a speedtest DataFrame:
-    add localized timestamps suitable for plotly, dash etc."""
+def append_tslocal(colname="tslocal"):
+    """Decorator: append localized timestamps suitable for plotly, dash etc."""
 
-    def outer(*args, **kwargs):
-        df = func(*args, **kwargs)
-        # Requires pandas >= 0.15.0 to get rid of tz.
-        df["tslocal"] = [
-            ts.astimezone(tzlocal.get_localzone()).tz_localize(None)
-            for ts in df.index
-        ]
-        return df
+    def decorator(func):
+        def decorated(*args, **kwargs):
+            # do_something(*outer_args,**outer_kwargs)
+            df = func(*args, **kwargs)
 
-    return outer
+            # Requires pandas >= 0.15.0 to get rid of tz.
+            df[colname] = [
+                ts.astimezone(tzlocal.get_localzone()).tz_localize(None)
+                for ts in df.index
+            ]
+            return df
+
+        return decorated
+
+    return decorator
 
 
 def _slice_input(source, start, end, cols=None):

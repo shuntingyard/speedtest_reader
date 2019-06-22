@@ -18,7 +18,7 @@ from speedtest_reader import reader
 from speedtest_reader import ValidationException
 
 # decorate
-read_by_ts = reader.add_tslocal(read_by_ts)
+read_by_ts = reader.append_tslocal(read_by_ts)
 
 __author__ = "Tobias Frei"
 __copyright__ = "Tobias Frei"

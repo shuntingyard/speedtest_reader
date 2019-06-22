@@ -13,10 +13,10 @@ Description
 
 - Keeps data in RAM (append only) to reduce IO (for long-running processes).
 
-- Allows to select subsets of columns / keys (for reading large files).
+- Allows to select subsets of columns / keys (e.g. when reading large files).
 
-- Can append additional timestamp types via decorators (for matplotlib,
-  plotly, dash).
+- Makes it easy to append additional timestamps via decorators (in formats
+  required by matplotlib, plotly, dash, etc).
 
 
 TODO list (high priorities first)
@@ -26,9 +26,11 @@ TODO list (high priorities first)
 
 - Terminology cleanup in doc and docstrings.
 
+- Split up test scripts: from function-centric to topic-centric.
+
 - Complete extended timezone test cases.
 
-- Enable project to use CI (look a travis).
+- Enable project to use CI (look at travis).
 
 - Backend:
 

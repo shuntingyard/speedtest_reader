@@ -4,6 +4,7 @@ import logging
 
 from io import StringIO
 
+import matplotlib.dates as mdates
 import pandas as pd
 import pytest
 import tzlocal
@@ -51,6 +52,20 @@ midnight = tzlocal.get_localzone().localize(
 my_offset = midnight.utcoffset()  # tester's offset from UTC
 
 logging.basicConfig(level=30)  # WARN: 30, INFO: 20, DEBUG: 10
+
+
+def miniframe(ts):
+    """Returns a minimal DataFrame with one row.
+    Args:
+        ts  (str) timestamp to convert to the index value
+    """
+    df = pd.DataFrame(columns=["ts", "naught"])
+    df.loc[0] = [ts, None]
+    df["ts"] = [pd.to_datetime(ts) for ts in df["ts"]]
+    df.set_index("ts", inplace=True)
+    return df
+
+
 # end helpers
 
 
@@ -133,23 +148,26 @@ def test_read_by_ts():
     # tests for decorators
     f = reader.bit_to_Mbit(read_by_ts)  # TODO complete when we have StringIO.
 
-    f = reader.add_mpldate(read_by_ts)
-    assert "mpldate" in f(infile).columns
+    name = "some_name"
+    TS = "1970-01-01 00:00:00.000000+00:00"
+    # decoration syntax to use for apps
+    f = (reader.append_mdates(colname=name))(miniframe)
+    # print(f(TS))
+    assert name in f(TS).columns
+    assert datetime.strptime(TS, "%Y-%m-%d %H:%M:%S.%f%z") == mdates.num2date(
+        f(TS).iloc[0, 1]
+    )
 
     TS = "2019-06-22 18:43:21.831314+00:00"
-    @reader.add_tslocal
-    def val_tslocal():
-        df = pd.DataFrame(columns=["ts", "naught"])
-        df.loc[0] = [TS, None]
-        df["ts"] = [pd.to_datetime(ts) for ts in df["ts"]]
-        df.set_index("ts", inplace=True)
-        return df
-
+    f = (reader.append_tslocal())(miniframe)
+    # print(f(TS))
     assert (
         my_offset
         + datetime.strptime(TS, "%Y-%m-%d %H:%M:%S.%f%z").replace(tzinfo=None)
-        == val_tslocal().iloc[0, 1]
+        == f(TS).iloc[0, 1]
     )
+    assert "tslocal" in f(TS).columns
+    # end decorators
 
     #
     # TODO all kind of ts range tests

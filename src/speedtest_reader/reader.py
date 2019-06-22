@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""Parse csv file produced by 'speedtest-cli' into pandas DataFrame.
+"""Parse file(s) written by 'speedtest-cli' into pandas DataFrame(s).
 """
 import logging
 import time
@@ -8,20 +8,55 @@ import time
 # import matplotlib.dates as mdates
 import pandas as pd
 
-from pytz import timezone as tz
-
 __author__ = "Tobias Frei"
 __copyright__ = "Tobias Frei"
 __license__ = "mit"
 
-
-def get_df(source, tz=None):
-    "Just get the DataFrame, hide implementation details"""
-    tmp = Reader(source, myzone=tz)
-    return tmp._get_df()
+_logger = logging.getLogger(__name__)
 
 
-# Don't bear the burden of Singletons ;)
+def _slice_input(source, start, end, cols=None):
+    """Slice input df using start and end."""
+
+    # ACCCESS DATAFRAME
+    df = Reader(source, cols=cols)._get_df()
+
+    s_pt = time.process_time()
+    s_pc = time.perf_counter()
+
+    # _logger.debug(f"{start} is lower bound of slice")
+    # _logger.debug(f"{end} is upper bound of slice")
+
+    # Find index values for slicing.
+    lower = df.index.searchsorted(start)
+    upper = df.index.searchsorted(end)
+
+    # Slice according to values.
+    if start:
+        if end:
+            df = df.iloc[lower:upper]
+        else:
+            df = df.iloc[lower:]
+    else:
+        if end:
+            df = df.iloc[:upper]
+        else:
+            pass
+
+    # _logger.debug(f"{df.index.min()} is min index in DataFrame")
+    # _logger.debug(f"{df.index.max()} is max index in DataFrame")
+
+    e_pt = time.process_time()
+    e_pc = time.perf_counter()
+    _logger.debug(f"process_time (sec): {e_pt - s_pt}")
+    _logger.debug(f"perf_counter (sec): {e_pc - s_pc}")
+
+    # print(df)
+
+    return df
+
+
+# don't bear the burden of singletons ;)
 class MonostatePattern:
 
     _shared_state = {}
@@ -32,46 +67,52 @@ class MonostatePattern:
 
 class Reader(MonostatePattern):
     """Keep DataFrame in memory and append to it when read requests
-    come in."""
+    come in.
+
+    Attributes:
+        source      file-like, as produced by `speedtest-cli --csv`
+                        -> impl: create new ram structure on change!
+        cols        ...
+                        -> impl: [if need be] re-read source on change!
+    """
 
     CHUNKSIZE = 1000
 
-    def __init__(self, infile, myzone=None, mpl_ts=False, agnostic=False):
-        """Read csv file with `speedtest-cli` data to initialize DataFrame.
-            Args:
-                infile      csv, as produced by `speedtest-cli --csv`
-                myzone      optional timezone to localize `Timestamp`
-                mpl_ts      Add matplotlib-friendly timestamp (`mtimestamp`).
-                agnostic    Add timezone-agnostic timestamp (`agnostic_t`).
-        """
+    def __init__(self, source, cols=None):
 
         # idiom for all versions of Python:
         super(Reader, self).__init__()
 
         # conditional init:
-        if len(self.__dict__) > 0 and self._infile == infile:
+        if (
+            len(self.__dict__) > 0
+            and self._infile == source
+            and self._cols == cols
+        ):
             pass  # monostate existed, infile same as before
+
         else:
-            self._infile = infile
-            self._myzone = myzone
-            self._mpl_ts = mpl_ts
-            self._agnostic = agnostic
+            self._infile = source
+            if not cols:
+                self._cols = ["Download", "Upload"]
+            else:
+                self._cols = cols
+            if "Timestamp" not in self._cols:
+                self._cols.append("Timestamp")
+                self._drop_ts = True
+            else:
+                self._drop_ts = False
 
             self._row_count = 0
-            self._logger = logging.getLogger(__name__)
-
             self._ramdf = pd.DataFrame()
-            # Load with input data, as we don't want the first client to be
-            # punished by lazy initialisation.
+
+            # eager initialisation
             self._status = "INIT"
             self._ramdf = self._get_df()
             self._status = "READ"
 
     def _get_df(self):
-        """To be done.
-            Return:
-                DataFrame
-        """
+
         len_before = len(self._ramdf.index)
 
         s_pt = time.process_time()
@@ -82,27 +123,27 @@ class Reader(MonostatePattern):
             chunksize=Reader.CHUNKSIZE,
             skiprows=range(1, len(self._ramdf.index) + 1),
             engine="c",
-            usecols=["Timestamp", "Download", "Upload"],
+            usecols=self._cols,
             converters={
-                "Timestamp": lambda t: pd.to_datetime(t),
-                "Download": lambda d: float(d) / (10 ** 6),
-                "Upload": lambda u: float(u) / (10 ** 6),
+                # TODO to decorators!
+                # "Timestamp": lambda t: pd.to_datetime(t),
+                # "Download": lambda d: float(d) / (10 ** 6),
+                # "Upload": lambda u: float(u) / (10 ** 6),
             },
         ):
-            # Localize `Timestamp`.
-            if self._myzone:
-                chunk["Timestamp"] = [
-                    ts.astimezone(tz(self._myzone))
-                    for ts in chunk["Timestamp"]
-                ]
+            # create column to be used for slicing
+            chunk["ts_datetime"] = [
+                pd.to_datetime(ts, utc=True) for ts in chunk["Timestamp"]
+            ]
+            chunk.set_index("ts_datetime", inplace=True)
 
-            # # Add matplotlib-friendly timestamp.
+            # # Add matplotlib-friendly timestamp.TODO to decorators!
             # if self._mpl_ts:
             #     chunk["mtimestamp"] = [
             #         mdates.date2num(ts) for ts in chunk["Timestamp"]
             #     ]
 
-            # # Add timezone-agnostic timestamp.
+            # # Add timezone-agnostic timestamp.TODO to decorators!
 
             # if self._agnostic:  # What a name - the two combined :)
             #     chunk["agnostic_t"] = [
@@ -110,16 +151,20 @@ class Reader(MonostatePattern):
             #     ]
 
             # Append to DataFrame in memory
-            self._ramdf = self._ramdf.append(chunk)
+            self._ramdf = self._ramdf.append(chunk, sort=False)
+
+        # remove if not on demand
+        if self._drop_ts:
+            self._ramdf.drop("Timestamp", axis=1, inplace=True)
 
         # end of read loop
         e_pt = time.process_time()
         e_pc = time.perf_counter()
-        self._logger.debug(f"process_time (sec): {e_pt - s_pt}")
-        self._logger.debug(f"perf_counter (sec): {e_pc - s_pc}")
+        _logger.debug(f"process_time (sec): {e_pt - s_pt}")
+        _logger.debug(f"perf_counter (sec): {e_pc - s_pc}")
 
-        self._logger.info(
-            "after {} df totals {} and grew by {}".format(
+        _logger.info(
+            "{}: df totals {} and grew by {}".format(
                 self._status,
                 len(self._ramdf.index),
                 len(self._ramdf.index) - len_before,

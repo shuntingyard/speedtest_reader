@@ -6,11 +6,8 @@ TODO Lorem ipsum sit blah...
 Note: This skeleton file can be safely removed if not needed!
 """
 
-__author__ = "Tobias Frei"
-__copyright__ = "Tobias Frei"
-__license__ = "mit"
-
 import _io
+import logging
 import os
 
 from datetime import datetime
@@ -21,10 +18,15 @@ import tzlocal
 
 from pkg_resources import get_distribution, DistributionNotFound
 
-from speedtest_reader.slicer import slice_input
+from speedtest_reader.reader import _slice_input
+
+__author__ = "Tobias Frei"
+__copyright__ = "Tobias Frei"
+__license__ = "mit"
+
+_logger = logging.getLogger(__name__)
 
 try:
-    # Change here if project is renamed and does not equal the package name
     dist_name = __name__
     __version__ = get_distribution(dist_name).version
 except DistributionNotFound:
@@ -34,7 +36,7 @@ finally:
 
 
 class ValidationException(Exception):
-    """A unifying wrapper around what's bad behind the scene.
+    """A unifying wrapper around what's bad behind the scenes.
 
     Attributes:
         parent - the exception one step back in the trace
@@ -52,16 +54,16 @@ def read_by_ts(source, start=None, end=None, tz=None):
         Datetime values are converted to UTC.
         None returns all data in infile.
 
-        Args:
-            source      the data source (str, bytes or os.PathLike object)
-            start_time  timezone-agnostic start value (str, datetime, None)
-            end_time    timezone-agnostic end value   (str, datetime, None)
-            tz          timezone (str), if None module tzlocal is used.
+    Args:
+        source      the data source (str, bytes or os.PathLike object)
+        start_time  timezone-agnostic start value (str, datetime, None)
+        end_time    timezone-agnostic end value   (str, datetime, None)
+        tz          timezone (str), if None module tzlocal is used.
 
-        Return:
-            pandas DataFrame,
-            start_timestamp (UTC),
-            end_timestamp (UTC) (both datetime)
+    Return:
+        pandas DataFrame,
+        start_timestamp (UTC),
+        end_timestamp (UTC) (both datetime)
     """
     # check allowed types to convey input data
     if type(source) in [str, os.PathLike, _io.StringIO]:
@@ -73,21 +75,21 @@ def read_by_ts(source, start=None, end=None, tz=None):
     if start:
         if isinstance(start, str):
             start = _parse(start)
-            print("start, post parsing:", start)
+            _logger.debug("start, post parsing: %s" % start)
 
         start = _datetime_to_utc(start, tz)
-        print("start, post conversion")
+        _logger.debug("start, post conversion: %s" % start)
 
     # check end
     if end:
         if isinstance(end, str):
             end = _parse(end)
-            print("end, post parsing:", start)
+            _logger.debug("end, post parsing: %s" % end)
 
         end = _datetime_to_utc(end, tz)
-        print("end, post conversion")
+        _logger.debug("end, post conversion: %s" % end)
 
-    return slice_input(source, start, end), start, end
+    return _slice_input(source, start, end), start, end
 
 
 def _parse(ts):
@@ -114,10 +116,10 @@ def _datetime_to_utc(time_in, tz):
         pass
     else:
         if tz:
-            # if we get one from user, use tz to localize
+            # If we get one from user, use tz to localize.
             time_in = timezone(tz).localize(time_in)
         else:
-            # if noting else use the local timezone
+            # if noting else: local timezone
             time_in = tzlocal.get_localzone().localize(time_in)
 
     return time_in.astimezone(timezone("UTC"))

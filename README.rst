@@ -13,15 +13,14 @@ Description
 
 - Keeps data in RAM (append only) to reduce IO (for long-running processes).
 
-- Allows to select subsets of columns / keys in data.
+- Allows to select subsets of columns / keys (for reading large files).
 
-- Can append additional timestamp types to data (via decorators in the API).
+- Can append additional timestamp types via decorators (for matplotlib,
+  plotly, dash).
 
 
 TODO list (high priorities first)
 =================================
-
-- Review API Exception design.
 
 - Review API function using mnemonics / shorthand.
 

@@ -18,4 +18,5 @@
 # So far there is no known need to pin anything.
 pytz
 dateparser
+matplotlib
 pandas

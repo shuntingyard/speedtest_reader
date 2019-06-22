@@ -25,7 +25,8 @@ def parse_args(args):
     """Parse command line parameters"""
 
     parser = argparse.ArgumentParser(
-        description="Test utility for the command line"
+        description="Test utility for the command line",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
         "-v",
@@ -79,17 +80,14 @@ def main(args):
 
     try:
         if args.mnemonic:
-            returned = read_by_mnemonic(
-                args.infile, args.mnemonic, tz=args.tz
+            df = read_by_mnemonic(
+                args.infile, args.mnemonic, slicer_tz=args.tz
             )
         else:
-            returned = read_by_ts(
-                args.infile, start=args.start, end=args.end, tz=args.tz
+            df = read_by_ts(
+                args.infile, start=args.start, end=args.end, slicer_tz=args.tz
             )
-        print("RETURNED -------")
-        for val in returned:
-            print(val)
-        print("RETURNED END ---")
+        print(df)
 
     except ValidationException as e:
         print(e.parent)

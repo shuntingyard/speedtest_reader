@@ -1,12 +1,17 @@
 # -*- coding: utf-8 -*-
+"""
+The core for parsing file(s) written by 'speedtest-cli' into pandas
+DataFrame(s).
 
-"""Parse file(s) written by 'speedtest-cli' into pandas DataFrame(s).
+Decorators are exposed in this module.
 """
 import logging
 import time
 
-# import matplotlib.dates as mdates
+# import functools
+import matplotlib.dates as mdates
 import pandas as pd
+import tzlocal
 
 __author__ = "Tobias Frei"
 __copyright__ = "Tobias Frei"
@@ -15,11 +20,50 @@ __license__ = "mit"
 _logger = logging.getLogger(__name__)
 
 
+def bit_to_Mbit(func):
+    """Decorator for functions returning a speedtest DataFrame:
+    convert bit to Mbit for upload and download."""
+
+    def outer(*args, **kwargs):
+        df = func(*args, **kwargs)
+        df["Download"] = [f / 10 ** 6 for f in df["Download"]]
+        df["Upload"] = [f / 10 ** 6 for f in df["Upload"]]
+        return df
+
+    return outer
+
+
+def add_mpldate(func):
+    """Decorator for functions returning a speedtest DataFrame:
+    add timestamps suitable for matplotlib (matplotlib.dates)."""
+
+    def outer(*args, **kwargs):
+        df = func(*args, **kwargs)
+        df["mpldate"] = [mdates.date2num(ts) for ts in df.index]
+        return df
+
+    return outer
+
+
+def add_tslocal(func):
+    """Decorator for functions returning a speedtest DataFrame:
+    add localized timestamps suitable for plotly, dash etc."""
+
+    def outer(*args, **kwargs):
+        df = func(*args, **kwargs)
+        df["tslocal"] = [
+            ts.astimezone(tzlocal.get_localzone()) for ts in df.index
+        ]
+        return df
+
+    return outer
+
+
 def _slice_input(source, start, end, cols=None):
-    """Slice input df using start and end."""
+    # Slice input df using start and end.
 
     # ACCCESS DATAFRAME
-    df = Reader(source, cols=cols)._get_df()
+    df = _Reader(source, cols=cols)._get_df()
 
     s_pt = time.process_time()
     s_pc = time.perf_counter()
@@ -57,7 +101,7 @@ def _slice_input(source, start, end, cols=None):
 
 
 # don't bear the burden of singletons ;)
-class MonostatePattern:
+class _MonostatePattern:
 
     _shared_state = {}
 
@@ -65,7 +109,7 @@ class MonostatePattern:
         self.__dict__ = self._shared_state
 
 
-class Reader(MonostatePattern):
+class _Reader(_MonostatePattern):
     """Keep DataFrame in memory and append to it when read requests
     come in.
 
@@ -81,7 +125,7 @@ class Reader(MonostatePattern):
     def __init__(self, source, cols=None):
 
         # idiom for all versions of Python:
-        super(Reader, self).__init__()
+        super(_Reader, self).__init__()
 
         # conditional init:
         if (
@@ -120,35 +164,16 @@ class Reader(MonostatePattern):
 
         for chunk in pd.read_csv(
             self._infile,
-            chunksize=Reader.CHUNKSIZE,
+            chunksize=_Reader.CHUNKSIZE,
             skiprows=range(1, len(self._ramdf.index) + 1),
             engine="c",
             usecols=self._cols,
-            converters={
-                # TODO to decorators!
-                # "Timestamp": lambda t: pd.to_datetime(t),
-                # "Download": lambda d: float(d) / (10 ** 6),
-                # "Upload": lambda u: float(u) / (10 ** 6),
-            },
         ):
             # create column to be used for slicing
-            chunk["ts_datetime"] = [
+            chunk["ts"] = [
                 pd.to_datetime(ts, utc=True) for ts in chunk["Timestamp"]
             ]
-            chunk.set_index("ts_datetime", inplace=True)
-
-            # # Add matplotlib-friendly timestamp.TODO to decorators!
-            # if self._mpl_ts:
-            #     chunk["mtimestamp"] = [
-            #         mdates.date2num(ts) for ts in chunk["Timestamp"]
-            #     ]
-
-            # # Add timezone-agnostic timestamp.TODO to decorators!
-
-            # if self._agnostic:  # What a name - the two combined :)
-            #     chunk["agnostic_t"] = [
-            #         ts.replace(tzinfo=None) for ts in chunk["Timestamp"]
-            #     ]
+            chunk.set_index("ts", inplace=True)
 
             # Append to DataFrame in memory
             self._ramdf = self._ramdf.append(chunk, sort=False)

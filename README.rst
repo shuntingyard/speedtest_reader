@@ -36,8 +36,6 @@ TODO list (high priorities first)
 
   - Extend API to allow selection of input columns (csv) / keys (json).
 
-  - Add decorators for appending timestamps (e.g. time series in matplotlib).
-
 - Assure compatibility with (at least newer) 2.x Python versions.
 
 - Assure this runs on earlier 3.x versions.

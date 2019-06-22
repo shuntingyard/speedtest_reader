@@ -18,7 +18,7 @@ import tzlocal
 
 from pkg_resources import get_distribution, DistributionNotFound
 
-from speedtest_reader.reader import _slice_input
+from speedtest_reader import reader
 
 __author__ = "Tobias Frei"
 __copyright__ = "Tobias Frei"
@@ -48,7 +48,7 @@ class ValidationException(Exception):
         self.message = message
 
 
-def read_by_ts(source, start=None, end=None, tz=None):
+def read_by_ts(source, start=None, end=None, slicer_tz=None):
     """Read by timestamp(s):
         On str input module dateparser is used.
         Datetime values are converted to UTC.
@@ -58,13 +58,22 @@ def read_by_ts(source, start=None, end=None, tz=None):
         source      the data source (str, bytes or os.PathLike object)
         start_time  timezone-agnostic start value (str, datetime, None)
         end_time    timezone-agnostic end value   (str, datetime, None)
-        tz          timezone (str), if None module tzlocal is used.
+        slicer_tz   timezone used for slicing time frames (str),
+                    if None module tzlocal is used.
 
     Return:
         pandas DataFrame,
-        start_timestamp (UTC),
-        end_timestamp (UTC) (both datetime)
     """
+    df, _, _ = _read_by_ts(source, start=start, end=end, tz=slicer_tz)
+    return df
+
+
+def _read_by_ts(source, start=None, end=None, tz=None):
+    # Return:
+    #   pandas DataFrame,
+    #   start_timestamp (UTC),
+    #   end_timestamp (UTC) (both datetime)
+
     # check allowed types to convey input data
     if type(source) in [str, os.PathLike, _io.StringIO]:
         pass
@@ -89,7 +98,7 @@ def read_by_ts(source, start=None, end=None, tz=None):
         end = _datetime_to_utc(end, tz)
         _logger.debug("end, post conversion: %s" % end)
 
-    return _slice_input(source, start, end), start, end
+    return reader._slice_input(source, start, end), start, end
 
 
 def _parse(ts):
@@ -125,10 +134,20 @@ def _datetime_to_utc(time_in, tz):
     return time_in.astimezone(timezone("UTC"))
 
 
-def read_by_mnemonic(source, mnemonic, tz=None):
+def read_by_mnemonic(source, mnemonic, slicer_tz=None):
     """Deprecated - this is covered in a much more flexible way
     by module dateparser.
     """
+    df, _, _ = _read_by_mnemonic(source, mnemonic, tz=slicer_tz)
+    return df
+
+
+def _read_by_mnemonic(source, mnemonic, tz=None):
+    # Return:
+    #   pandas DataFrame,
+    #   start_timestamp (UTC),
+    #   end_timestamp (UTC) (both datetime)
+
     if mnemonic in get_mnemonics():
         # helper variables
         last_midnight = datetime.combine(datetime.now(), datetime.min.time())
@@ -143,7 +162,7 @@ def read_by_mnemonic(source, mnemonic, tz=None):
         # In all cases so far end is `None` (i.e. the present).
         end = None
 
-        return read_by_ts(source, start=start, end=end, tz=tz)
+        return _read_by_ts(source, start=start, end=end, tz=tz)
     else:
         raise ValidationException(None, "Not a mnemonic: %s" % mnemonic)
 

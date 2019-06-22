@@ -51,8 +51,10 @@ def add_tslocal(func):
 
     def outer(*args, **kwargs):
         df = func(*args, **kwargs)
+        # Requires pandas >= 0.15.0 to get rid of tz.
         df["tslocal"] = [
-            ts.astimezone(tzlocal.get_localzone()) for ts in df.index
+            ts.astimezone(tzlocal.get_localzone()).tz_localize(None)
+            for ts in df.index
         ]
         return df
 

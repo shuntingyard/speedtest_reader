@@ -4,6 +4,7 @@ import logging
 
 from io import StringIO
 
+import pandas as pd
 import pytest
 import tzlocal
 
@@ -135,8 +136,20 @@ def test_read_by_ts():
     f = reader.add_mpldate(read_by_ts)
     assert "mpldate" in f(infile).columns
 
-    f = reader.add_tslocal(read_by_ts)
-    assert "tslocal" in f(infile).columns
+    TS = "2019-06-22 18:43:21.831314+00:00"
+    @reader.add_tslocal
+    def val_tslocal():
+        df = pd.DataFrame(columns=["ts", "naught"])
+        df.loc[0] = [TS, None]
+        df["ts"] = [pd.to_datetime(ts) for ts in df["ts"]]
+        df.set_index("ts", inplace=True)
+        return df
+
+    assert (
+        my_offset
+        + datetime.strptime(TS, "%Y-%m-%d %H:%M:%S.%f%z").replace(tzinfo=None)
+        == val_tslocal().iloc[0, 1]
+    )
 
     #
     # TODO all kind of ts range tests

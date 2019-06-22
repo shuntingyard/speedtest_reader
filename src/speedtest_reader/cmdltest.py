@@ -14,7 +14,11 @@ from speedtest_reader import __version__
 from speedtest_reader import get_mnemonics
 from speedtest_reader import read_by_mnemonic
 from speedtest_reader import read_by_ts
+from speedtest_reader import reader
 from speedtest_reader import ValidationException
+
+# decorate
+read_by_ts = reader.add_tslocal(read_by_ts)
 
 __author__ = "Tobias Frei"
 __copyright__ = "Tobias Frei"

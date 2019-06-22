@@ -19,4 +19,4 @@
 pytz
 dateparser
 matplotlib
-pandas
+pandas>=0.15.0

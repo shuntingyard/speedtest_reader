@@ -24,7 +24,7 @@ __author__ = "Tobias Frei"
 __copyright__ = "Tobias Frei"
 __license__ = "mit"
 
-_logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 try:
     dist_name = __name__
@@ -84,19 +84,19 @@ def _read_by_ts(source, start=None, end=None, tz=None):
     if start:
         if isinstance(start, str):
             start = _parse(start)
-            _logger.debug("start, post parsing: %s" % start)
+            logger.debug("start, post parsing: %s" % start)
 
         start = _datetime_to_utc(start, tz)
-        _logger.debug("start, post conversion: %s" % start)
+        logger.debug("start, post conversion: %s" % start)
 
     # check end
     if end:
         if isinstance(end, str):
             end = _parse(end)
-            _logger.debug("end, post parsing: %s" % end)
+            logger.debug("end, post parsing: %s" % end)
 
         end = _datetime_to_utc(end, tz)
-        _logger.debug("end, post conversion: %s" % end)
+        logger.debug("end, post conversion: %s" % end)
 
     return reader._slice_input(source, start, end), start, end
 

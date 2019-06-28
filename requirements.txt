@@ -15,7 +15,6 @@
 # numpy==1.13.3
 # scipy==1.0
 
-# So far there is no known need to pin anything.
 pytz
 dateparser
 matplotlib

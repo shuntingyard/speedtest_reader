@@ -17,7 +17,7 @@ __author__ = "Tobias Frei"
 __copyright__ = "Tobias Frei"
 __license__ = "mit"
 
-_logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def bit_to_Mbit(func):
@@ -101,8 +101,8 @@ def _slice_input(source, start, end, cols=None):
 
     e_pt = time.process_time()
     e_pc = time.perf_counter()
-    _logger.debug(f"process_time (sec): {e_pt - s_pt}")
-    _logger.debug(f"perf_counter (sec): {e_pc - s_pc}")
+    logger.debug(f"process_time (sec): {e_pt - s_pt}")
+    logger.debug(f"perf_counter (sec): {e_pc - s_pc}")
 
     # print(df)
 
@@ -194,10 +194,10 @@ class _Reader(_MonostatePattern):
         # end of read loop
         e_pt = time.process_time()
         e_pc = time.perf_counter()
-        _logger.debug(f"process_time (sec): {e_pt - s_pt}")
-        _logger.debug(f"perf_counter (sec): {e_pc - s_pc}")
+        logger.debug(f"process_time (sec): {e_pt - s_pt}")
+        logger.debug(f"perf_counter (sec): {e_pc - s_pc}")
 
-        _logger.info(
+        logger.info(
             "{}: df totals {} and grew by {}".format(
                 self._status,
                 len(self._ramdf.index),

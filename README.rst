@@ -16,7 +16,7 @@ Description
 - Allows to select subsets of columns / keys (e.g. when reading large files).
 
 - Makes it easy to append additional timestamps via decorators (in formats
-  required by matplotlib, plotly, dash, etc).
+  required by matplotlib, plotly, dash etc).
 
 
 TODO list (high priorities first)

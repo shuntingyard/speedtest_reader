@@ -65,7 +65,14 @@ Python API
 Example 1
 ~~~~~~~~~
 
-.. literalinclude:: example.py
+.. code-block:: python
+   :emphasize-lines: 3,5
+
+import sys
+
+# Why do you print none?
+print([v for v in sys.argv])
+print(None)
 
 Changelog
 ---------

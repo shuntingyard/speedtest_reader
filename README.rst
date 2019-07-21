@@ -62,19 +62,25 @@ or
 Python API
 ----------
 
-Example 1
-~~~~~~~~~
+.. literalinclude:: examples/apiconfig.py
 
-.. code-block:: python
+Example section
+---------------
 
-import sys
+plotly
+~~~~~~
 
-print([v for v in sys.argv])
+.. literalinclude:: examples/plotly_example.py
 
-Changelog
----------
+seaborn
+~~~~~~~
 
-Version 0.0.4
-~~~~~~~~~~~~~
+.. literalinclude:: examples/seaborn_example.py
 
-- Complete API redesign
+timezone config
+~~~~~~~~~~~~~~~
+
+.. literalinclude:: examples/timezone.py
+
+
+.. include:: CHANGELOG.rst

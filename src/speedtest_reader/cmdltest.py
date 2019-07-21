@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
 """
 Command line utility for manual testing
 """
@@ -11,14 +12,13 @@ import sys
 import pandas as pd
 
 from speedtest_reader import __version__
-from speedtest_reader import get_mnemonics
-from speedtest_reader import read_by_mnemonic
-from speedtest_reader import read_by_ts
-from speedtest_reader import reader
-from speedtest_reader import ValidationException
 
-# decorate
-read_by_ts = reader.append_tslocal(read_by_ts)
+from speedtest_reader.oldinit import get_mnemonics
+from speedtest_reader.oldinit import read_by_mnemonic
+
+from speedtest_reader import format_timestamps
+from speedtest_reader import Reader
+from speedtest_reader.util import ValidationException
 
 __author__ = "Tobias Frei"
 __copyright__ = "Tobias Frei"
@@ -76,11 +76,20 @@ def main(args):
       args ([str]): command line parameter list
     """
     args = parse_args(args)
-    # print(args)
+    print(args)
+    timezone = args.tz
 
     # extent of details to print
     logging.basicConfig(level=args.loglevel)
     pd.options.display.max_rows = args.r
+
+    # set up sensor
+    sensor1 = Reader(args.infile)
+
+    def slice_s1(**kwargs):
+        kwargs["tz"] = timezone
+        start, end = format_timestamps(**kwargs)
+        return sensor1.copy_df(start, end)
 
     try:
         if args.mnemonic:
@@ -88,9 +97,8 @@ def main(args):
                 args.infile, args.mnemonic, slicer_tz=args.tz
             )
         else:
-            df = read_by_ts(
-                args.infile, start=args.start, end=args.end, slicer_tz=args.tz
-            )
+            df = slice_s1(start=args.start, end=args.end)
+
         print(df)
 
     except ValidationException as e:

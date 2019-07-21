@@ -24,7 +24,7 @@ speedtest_reader works with Python 3.1-3.7
 Recent changes
 --------------
 
-- Complete API redesign (see Python API below)
+- Complete API redesign (see :ref:`Python API` below)
 
 Installation
 ------------
@@ -60,9 +60,23 @@ or
 Python API
 ----------
 
-.. include:: examples/apiconfig.py
-   :literal:
-   :language: Python
+.. code:: python
+
+   from speedtest_reader import format_timestamps, Reader, util
+
+   sensor1 = Reader("~/speedtest.csv")
+
+
+   @util.to_Mbit
+   def slice_s1(**kwargs):
+       start, end = format_timestamps(**kwargs)
+       return sensor1.copy_df(start, end)
+
+
+   # Test API setup
+   print(slice_s1(start="2019-06-01"))
+   print(slice_s1(start="July 1", end="July 3"))
+   print(slice_s1(start="yesterday"))
 
 Example section
 ---------------
@@ -70,16 +84,61 @@ Example section
 plotly
 ~~~~~~
 
-.. include:: examples/plotly_example.py
-   :literal:
-   :language: Python
+.. code:: python
+
+   import plotly
+   import plotly.graph_objs as go
+   from speedtest_reader import format_timestamps, Reader, util
+
+   sensor1 = Reader("~/speedtest.csv")
+
+
+   @util.append_tslocal()
+   def slice_s1(**kwargs):
+       kwargs["tz"] = "EST"
+       start, end = format_timestamps(**kwargs)
+       return sensor1.copy_df(start, end)
+
+
+   # minimal line- and scatterplot example
+   df = slice_s1()
+   graph = dict(
+       data=[
+           go.Scatter(
+               x=df["tslocal"], y=df["Download"], mode="lines", connectgaps=False
+           ),
+           go.Scatter(x=df["tslocal"], y=df["Upload"], mode="markers"),
+       ]
+   )
+   plotly.offline.plot(graph)
 
 seaborn
 ~~~~~~~
 
-.. include:: examples/seaborn_example.py
-   :literal:
-   :language: Python
+.. code:: python
+
+   import matplotlib.pyplot as plt
+   import seaborn as sns
+   from speedtest_reader import format_timestamps, Reader, util
+
+   sensor1 = Reader("~/speedtest.csv")
+
+
+   @util.to_Mbit
+   @util.append_mpldate(colname="date2num")
+   def slice_s1(**kwargs):
+       kwargs["tz"] = "EST"
+       start, end = format_timestamps(**kwargs)
+       return sensor1.copy_df(start, end)
+
+
+   # minimal scatterplot example
+   ts = slice_s1()["date2num"]
+   dl = slice_s1()["Download"]
+   _, ax = plt.subplots()
+   sns.scatterplot(ts, dl)
+   ax.xaxis_date()
+   plt.show()
 
 timezone config
 ~~~~~~~~~~~~~~~

@@ -8,7 +8,6 @@ sensor1 = Reader("~/speedtest.csv")
 @util.to_Mbit
 @util.append_mpldate(colname="date2num")
 def slice_s1(**kwargs):
-    kwargs["tz"] = "EST"
     start, end = format_timestamps(**kwargs)
     return sensor1.copy_df(start, end)
 

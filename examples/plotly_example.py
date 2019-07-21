@@ -7,7 +7,6 @@ sensor1 = Reader("~/speedtest.csv")
 
 @util.append_tslocal()
 def slice_s1(**kwargs):
-    kwargs["tz"] = "EST"
     start, end = format_timestamps(**kwargs)
     return sensor1.copy_df(start, end)
 

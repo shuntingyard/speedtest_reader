@@ -1,7 +1,10 @@
+=========
 Changelog
----------
+=========
 
-Version 0.0.4
-~~~~~~~~~~~~~
+Version 0.1
+===========
 
-- Complete API redesign
+- Feature A added
+- FIX: nasty bug #1729 fixed
+- add your changes here!

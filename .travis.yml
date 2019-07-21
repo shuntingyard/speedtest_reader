@@ -1,33 +1,55 @@
-# Travis configuration file using the build matrix feature
-# Read more under http://docs.travis-ci.com/user/build-configuration/
-# THIS SCRIPT IS SUPPOSED TO BE AN EXAMPLE. MODIFY IT ACCORDING TO YOUR NEEDS!
-
-sudo: false
 language: python
-virtualenv:
-  system_site_packages: true
+
+addons:
+  apt:
+    sources:
+      - deadsnakes
+    packages:
+      - python2.4
+      - python2.5
+      - python2.6
+      - python3.2
+      - python3.3
+
 matrix:
   include:
+    - python: 2.7
+      env: TOXENV=flake8
+    - python: 2.7
+      env: TOXENV=py24
+    - python: 2.7
+      env: TOXENV=py25
+    - python: 2.7
+      env: TOXENV=py26
+    - python: 2.7
+      env: TOXENV=py27
+    - python: 2.7
+      env: TOXENV=py32
+    - python: 2.7
+      env: TOXENV=py33
     - python: 3.4
-      env: DISTRIB="ubuntu" TOX_PYTHON_VERSION="py34" COVERAGE="true"
-    - env: DISTRIB="conda" PYTHON_VERSION="3.6" COVERAGE="false"
+      env: TOXENV=py34
+    - python: 3.5
+      env: TOXENV=py35
+    - python: 3.6
+      env: TOXENV=py36
+    - python: pypy
+      env: TOXENV=pypy
+
+before_install:
+  - if [[ $(echo "$TOXENV" | egrep -c "py35") != 0 ]]; then pyenv global system 3.5; fi;
+
 install:
-  - source tests/travis_install.sh
-  - pip install -r requirements.txt
-  # ^  DEPRECATION WARNING:
-  # The automatic creation of a `requirements.txt` file is deprecated.
-  # See `Dependency Management` in the docs for other options.
-before_script:
-  - git config --global user.email "you@example.com"
-  - git config --global user.name "Your Name"
+  - if [[ $(echo "$TOXENV" | egrep -c "py32") != 0 ]]; then pip install setuptools==17.1.1; fi;
+  - if [[ $(echo "$TOXENV" | egrep -c "(py2[45]|py3[12])") != 0 ]]; then pip install virtualenv==1.7.2 tox==1.3; fi;
+  - if [[ $(echo "$TOXENV" | egrep -c "(py26|py33)") != 0 ]]; then pip install virtualenv==15.2.0 tox==2.9.1; fi;
+  - if [[ $(echo "$TOXENV" | egrep -c "(py2[456]|py3[123])") == 0 ]]; then pip install tox; fi;
+
+
+
 script:
-  - python setup.py test
-  # ^  Change here if using tox
-after_success:
-  - if [[ "$COVERAGE" == "true" ]]; then coveralls || echo "failed"; fi
-after_script:
-  - travis-cleanup
-cache:
-  pip: true
-  directories:
-    - $HOME/miniconda
+  - tox
+
+notifications:
+  email:
+    - shuntingyard@gmail.com

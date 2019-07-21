@@ -140,18 +140,18 @@ def format_timestamps(start=None, end=None, tz=None):
     if start:
         if isinstance(start, str):
             start = util.parse_ts(start)
-            logger.debug("start, post parsing: %s" % start)
+            # logger.debug("start, post parsing: %s" % start)
 
         start = util.datetime_to_utc(start, tz)
-        logger.debug("start, post conversion: %s" % start)
+        # logger.debug("start, post conversion: %s" % start)
 
     # check end
     if end:
         if isinstance(end, str):
             end = util.parse_ts(end)
-            logger.debug("end, post parsing: %s" % end)
+            # logger.debug("end, post parsing: %s" % end)
 
         end = util.datetime_to_utc(end, tz)
-        logger.debug("end, post conversion: %s" % end)
+        # logger.debug("end, post conversion: %s" % end)
 
     return start, end

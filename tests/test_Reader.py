@@ -3,9 +3,7 @@
 import pytest
 
 from speedtest_reader import Reader
-from speedtest_reader import ValidationException
-
-from . import helpers
+from speedtest_reader.util import ValidationException
 
 __author__ = "Tobias Frei"
 __copyright__ = "Tobias Frei"

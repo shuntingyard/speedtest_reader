@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import logging
-
-from io import StringIO
+import io
 
 import pandas as pd
 import tzlocal
@@ -28,9 +27,10 @@ CSV = "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n%s\n" % (
 )
 
 # TODO remedy required: this is usable ONE time, then its position is at EOF.
-infile = StringIO(CSV)
-
+infile = io.StringIO(CSV)
 infile = "./testdata/headers+1.csv"
+
+binfile = io.BytesIO(b'\xd8,\xd1,\x6e,\xda,\x2f,\xfd,\x6e.\x30')
 
 midnight = tzlocal.get_localzone().localize(
     datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)

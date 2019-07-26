@@ -17,12 +17,12 @@ __license__ = "mit"
 def test_format_timestamps():
 
     # tests for decorators
-    f = util.bit_to_Mbit(format_timestamps)  # TODO complete when we have StringIO.
+    f = util.to_Mbit(format_timestamps)  # TODO complete when we have StringIO.
 
     name = "some_name"
     TS = "1970-01-01 00:00:00.000000+00:00"
     # decoration syntax to use for apps
-    f = (util.append_mdates(colname=name))(helpers.miniframe)
+    f = (util.append_mpldate(colname=name))(helpers.miniframe)
     # print(f(TS))
     assert name in f(TS).columns
     assert datetime.strptime(TS, "%Y-%m-%d %H:%M:%S.%f%z") == mdates.num2date(

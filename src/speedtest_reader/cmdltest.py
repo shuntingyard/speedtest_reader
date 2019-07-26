@@ -13,9 +13,6 @@ import pandas as pd
 
 from speedtest_reader import __version__
 
-from speedtest_reader.oldinit import get_mnemonics
-from speedtest_reader.oldinit import read_by_mnemonic
-
 from speedtest_reader import format_timestamps
 from speedtest_reader import Reader
 from speedtest_reader.util import ValidationException
@@ -46,12 +43,6 @@ def parse_args(args):
     )
     parser.add_argument(
         "-e", "--end", help="set end timestamp", action="store"
-    )
-    parser.add_argument(
-        "-m",
-        "--mnemonic",
-        help="set one of %s" % get_mnemonics(),
-        action="store",
     )
     parser.add_argument(
         "-Z", "--tz", help="set timezone for slicing", action="store"
@@ -89,16 +80,11 @@ def main(args):
     def slice_s1(**kwargs):
         kwargs["tz"] = timezone
         start, end = format_timestamps(**kwargs)
+        print("START", start, "END", end)
         return sensor1.copy_df(start, end)
 
     try:
-        if args.mnemonic:
-            df = read_by_mnemonic(
-                args.infile, args.mnemonic, slicer_tz=args.tz
-            )
-        else:
-            df = slice_s1(start=args.start, end=args.end)
-
+        df = slice_s1(start=args.start, end=args.end)
         print(df)
 
     except ValidationException as e:

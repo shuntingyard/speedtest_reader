@@ -11,6 +11,7 @@ import pandas as pd
 from pkg_resources import get_distribution, DistributionNotFound
 
 from speedtest_reader import util
+from speedtest_reader.util import ValidationException
 
 __author__ = "Tobias Frei"
 __copyright__ = "Tobias Frei"
@@ -58,7 +59,10 @@ class Reader:
 
         # eager initialisation
         self._status = "INIT"
-        self._ramdf = self.copy_df(None, None)
+        try:
+            self._ramdf = self.copy_df(None, None)
+        except Exception as e:
+            raise ValidationException(e, "Cannot read '{}'.".format(source))
         self._status = "READ"
 
     @util.stopwatch

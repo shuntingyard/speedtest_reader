@@ -4,9 +4,9 @@
 
 - [ ] Assure this runs on earlier 3.x versions.
 
-- [ ] Review API function using mnemonics / shorthand.
+- [x] Review API function using mnemonics / shorthand.
 
-- [ ] Split up test scripts.
+- [x] Split up test scripts.
 
 - [ ] Complete automatic test cases.
 

@@ -40,6 +40,11 @@ def test_format_timestamps():
     assert "tslocal" in f(TS).columns
     # end decorators
 
-    #
     # TODO all kind of ts range tests
+    #
+
+    # TODO For to_Mbit decorator: test what happens when dealing with dfs:
+
+    # - where only one of "Download", "Upload" is present
+    # - neither of these two is present
     #

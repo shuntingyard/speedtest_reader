@@ -34,7 +34,14 @@ def test_Reader():
 
     # TODO Add testcases around keyword arg 'cols'.
 
-    # copy_df
+    # type of 'cols' not `str` or `list`
+    # "all"
+    # `str` other than "all"
+    # value not in columns available
+    # value more than once
+    #
+
+    # TODO Add testcases for 'copy_df'.
 
     # start > end
     # start == end

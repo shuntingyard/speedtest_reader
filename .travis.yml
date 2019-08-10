@@ -1,23 +1,14 @@
 dist: xenial   # required for Python >= 3.7
 language: python
 
-addons:
-  apt:
-    sources:
-      - deadsnakes
-    packages:
-      - python3.2
-      - python3.3
-
-matrix:
-  include:
-      #- python: 3.2
-      #- python: 3.3
-    - python: 3.4
-    - python: 3.5
-    - python: 3.6
-    - python: 3.7
-    - python: "3.8-dev"
+python:
+    #- python: 3.2
+    #- python: 3.3
+  - python: "3.4"
+  - python: "3.5"
+  - python: "3.6"
+  - python: "3.7"
+  - python: "3.8-dev"
 
 install:
   - pip install setuptools;
